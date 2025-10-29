@@ -247,37 +247,3 @@ button:disabled {
 .dialog-buttons button {
     margin: 0 10px;
 }
-
-/* レスポンシブ対応 */
-@media (max-width: 600px) {
-    .container {
-        padding: 15px;
-    }
-    
-    .info-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .input-area {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-    }
-    
-    #nextWordInput {
-        width: 100%;
-        max-width: 300px;
-        margin-right: 0;
-    }
-    
-    .ranking-item {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .ranking-name {
-        margin: 5px 0;
-    }
-}

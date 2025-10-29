@@ -211,19 +211,6 @@ function updateGameInfo(data) {
         elements.usedWordsCount.textContent = `使用単語数: ${data.usedWordsCount}`;
     }
     
-    // タイマー表示
-    if (data.timeRemaining !== null && data.timeRemaining !== undefined) {
-        elements.timer.textContent = `残り時間: ${data.timeRemaining}秒`;
-        elements.timer.style.display = "block";
-        
-        // 時間切れチェック
-        if (data.timeRemaining <= 0 && gameState.isPlaying) {
-            endGame("時間切れです！");
-        }
-    } else {
-        elements.timer.style.display = "none";
-    }
-    
     // モード表示更新
     updateModeDisplay();
 }
@@ -238,23 +225,6 @@ function updateModeDisplay() {
         "both": "縛りプレイ"
     };
     elements.currentMode.textContent = `モード: ${modeNames[selectedMode]}`;
-}
-
-// タイマー開始
-function startTimer() {
-    if (gameState.currentMode.includes("time-limit")) {
-        gameState.timerInterval = setInterval(async () => {
-            await updateGameDisplay();
-        }, 1000);
-    }
-}
-
-// タイマー停止
-function stopTimer() {
-    if (gameState.timerInterval) {
-        clearInterval(gameState.timerInterval);
-        gameState.timerInterval = null;
-    }
 }
 
 // ランキング表示

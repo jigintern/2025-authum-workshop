@@ -95,23 +95,6 @@ Deno.serve(async (_req) => {
         gameState.score += nextWord.length; // 文字数分スコア加算
         gameState.gameActive = true;
 
-        // ゲーム開始時刻を記録
-        if (!gameState.startTime && gameState.mode.includes("time-limit")) {
-            gameState.startTime = Date.now();
-        }
-
-        // 現在の状態を返す
-        return new Response(JSON.stringify({
-            previousWord: gameState.previousWord,
-            score: gameState.score,
-            timeRemaining: gameState.mode.includes("time-limit") && gameState.startTime 
-                ? Math.max(0, gameState.timeLimit - Math.floor((Date.now() - gameState.startTime) / 1000))
-                : null,
-            gameActive: gameState.gameActive,
-            usedWordsCount: gameState.usedWords.size
-        }), {
-            headers: { "Content-Type": "application/json; charset=utf-8" }
-        });
     }
     
     // GET Reset : ゲームをリセットする

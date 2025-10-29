@@ -4,6 +4,9 @@ import { serveDir } from "jsr:@std/http/file-server";
 // 直前の単語を保持しておく
 let previousWord = "しりとり";
 
+// ランキングデータを保存する配列
+let rankings = [];
+
 // localhostにDenoのHTTPサーバーを展開
 Deno.serve(async (_req) => {
     // パス名を取得する
@@ -23,8 +26,27 @@ Deno.serve(async (_req) => {
         // JSONの中からnextWordを取得
         const nextWord = requestJson["nextWord"];
 
+        // previousWordの末尾文字を取得（「ー」の場合は前の文字を参照）
+        function getLastChar(word) {
+            if (word.length === 0) return "";
+            
+            let lastChar = word.slice(-1);
+            let index = word.length - 1;
+            
+            // 末尾が「ー」の場合、前の文字を探す
+            while (lastChar === "ー" && index > 0) {
+                index--;
+                lastChar = word.slice(index, index + 1);
+            }
+            
+            return lastChar;
+        }
+
         // previousWordの末尾とnextWordの先頭が同一か確認
-        if (previousWord.slice(-1) === nextWord.slice(0, 1)) {
+        const lastCharOfPrevious = getLastChar(previousWord);
+        const firstCharOfNext = nextWord.slice(0, 1);
+        
+        if (lastCharOfPrevious === firstCharOfNext) {
             // 同一であれば、previousWordを更新
             previousWord = nextWord;
         }
@@ -50,7 +72,68 @@ Deno.serve(async (_req) => {
     if (_req.method === "GET" && pathname === "/Reset"){
         previousWord = "しりとり";
         return new Response(previousWord);
+    }
 
+    // POST /score : スコアを受信して保存する
+    if (_req.method === "POST" && pathname === "/score") {
+        try {
+            // リクエストのペイロードを取得
+            const requestJson = await _req.json();
+            const score = requestJson["score"];
+            const timestamp = requestJson["timestamp"];
+            const gameType = requestJson["gameType"];
+
+            // スコアをログに出力（実際のアプリではデータベースに保存するなど）
+            console.log(`新しいスコアを受信: ${score}単語 (${timestamp}, ${gameType})`);
+
+            // ランキングデータに追加
+            rankings.push({
+                score: score,
+                timestamp: timestamp,
+                gameType: gameType,
+                id: Date.now() // 簡易的なID
+            });
+
+            // スコア降順でソートし、上位10件のみ保持
+            rankings.sort((a, b) => b.score - a.score);
+            rankings = rankings.slice(0, 10);
+
+            // 成功レスポンスを返す
+            return new Response(
+                JSON.stringify({
+                    "message": "スコアが正常に保存されました",
+                    "score": score,
+                    "timestamp": timestamp
+                }),
+                {
+                    status: 200,
+                    headers: { "Content-Type": "application/json; charset=utf-8" },
+                }
+            );
+        } catch (error) {
+            // エラーレスポンスを返す
+            return new Response(
+                JSON.stringify({
+                    "errorMessage": "スコアの保存に失敗しました",
+                    "errorCode": "20001"
+                }),
+                {
+                    status: 500,
+                    headers: { "Content-Type": "application/json; charset=utf-8" },
+                }
+            );
+        }
+    }
+
+    // GET /ranking : ランキングデータを取得する
+    if (_req.method === "GET" && pathname === "/ranking") {
+        return new Response(
+            JSON.stringify(rankings),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json; charset=utf-8" },
+            }
+        );
     }
 
     // ./public以下のファイルを公開

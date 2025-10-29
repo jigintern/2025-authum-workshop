@@ -35,10 +35,27 @@
     let remainingTime = TIMER_DURATION;
     let isTimerMode = false;
 
+    // 同一単語禁止モード管理
+    let isUniqueWordMode = false;
+    let usedWords = new Set(); // 使用済み単語を記録
+
     // スコア表示を更新する関数
     function updateScore() {
       const scoreDisplay = document.querySelector("#scoreDisplay");
       scoreDisplay.innerHTML = `スコア: ${wordCount}単語`;
+    }
+
+    // ゲームタイプを取得する関数
+    function getGameType() {
+      if (isTimerMode && isUniqueWordMode) {
+        return "timer_unique";
+      } else if (isTimerMode) {
+        return "timer";
+      } else if (isUniqueWordMode) {
+        return "unique";
+      } else {
+        return "normal";
+      }
     }
 
     // タイマー表示を更新する関数
@@ -77,7 +94,8 @@
     // 時間切れの処理
     async function handleTimeUp() {
       // ゲームオーバー時にスコアをサーバーに送信
-      await sendScoreToServer(wordCount, "timer");
+      const gameType = getGameType();
+      await sendScoreToServer(wordCount, gameType);
       alert(`時間切れ！\n最終スコア: ${wordCount}単語`);
       // ゲームをリセット
       await resetGame();
@@ -137,7 +155,22 @@
         const listItem = document.createElement("li");
         const date = new Date(ranking.timestamp).toLocaleDateString();
         const time = new Date(ranking.timestamp).toLocaleTimeString();
-        const gameTypeText = ranking.gameType === "timer" ? " [タイマー]" : " [通常]";
+        
+        // ゲームタイプの表示テキストを決定
+        let gameTypeText = " [通常]";
+        switch (ranking.gameType) {
+          case "timer":
+            gameTypeText = " [タイマー]";
+            break;
+          case "unique":
+            gameTypeText = " [重複禁止]";
+            break;
+          case "timer_unique":
+            gameTypeText = " [タイマー＋重複禁止]";
+            break;
+          default:
+            gameTypeText = " [通常]";
+        }
         
         listItem.innerHTML = `
           <strong>${ranking.score}単語</strong>${gameTypeText}
@@ -176,6 +209,10 @@
       remainingTime = TIMER_DURATION;
       isTimerMode = false;
       
+      // 同一単語禁止モードをリセット
+      isUniqueWordMode = false;
+      usedWords.clear();
+      
       // ゲームエリアを非表示にする
       const gameArea = document.querySelector("#gameArea");
       gameArea.style.display = "none";
@@ -188,10 +225,16 @@
       // inputの中身を取得
       const nextWordInputText = nextWordInput.value;
       
+      // 同一単語禁止モードでの重複チェック
+      if (isUniqueWordMode && usedWords.has(nextWordInputText)) {
+        alert(`この単語「${nextWordInputText}」は既に使用されています。\n別の単語を入力してください。`);
+        return;
+      }
+      
       // 入力された単語が'ん'で終わっているかチェック
       if (nextWordInputText.endsWith('ん')) {
         // ゲームオーバー時にスコアをサーバーに送信
-        const gameType = isTimerMode ? "timer" : "normal";
+        const gameType = getGameType();
         await sendScoreToServer(wordCount, gameType);
         alert(`ゲームオーバー！「ん」で終わる単語を入力しました。\n最終スコア: ${wordCount}単語`);
         // ゲームをリセット
@@ -224,6 +267,11 @@
       wordCount++;
       updateScore();
 
+      // 同一単語禁止モードの場合、使用済み単語に追加
+      if (isUniqueWordMode) {
+        usedWords.add(nextWordInputText);
+      }
+
       // id: previousWordのタグを取得
       const paragraph = document.querySelector("#previousWord");
       // 取得したタグの中身を書き換える
@@ -240,6 +288,15 @@
       const timerModeCheckbox = document.querySelector("#timerModeCheckbox");
       isTimerMode = timerModeCheckbox.checked;
       
+      // 同一単語禁止モードのチェック状態を取得
+      const uniqueWordModeCheckbox = document.querySelector("#uniqueWordModeCheckbox");
+      isUniqueWordMode = uniqueWordModeCheckbox.checked;
+      
+      // 同一単語禁止モードの場合、初期単語「しりとり」を使用済みに追加
+      if (isUniqueWordMode) {
+        usedWords.add("しりとり");
+      }
+      
       // ゲームエリアを表示する
       const gameArea = document.querySelector("#gameArea");
       gameArea.style.display = "block";
@@ -252,10 +309,18 @@
         remainingTime = TIMER_DURATION;
         updateTimer();
         startTimer();
-        alert(`タイマーモードでゲームを開始します！\n制限時間: ${TIMER_DURATION}秒`);
-      } else {
-        alert('ゲームを開始します！');
       }
+      
+      // 開始メッセージを表示
+      let message = 'ゲームを開始します！';
+      if (isTimerMode && isUniqueWordMode) {
+        message = `タイマー＋同一単語禁止モードでゲームを開始します！\n制限時間: ${TIMER_DURATION}秒`;
+      } else if (isTimerMode) {
+        message = `タイマーモードでゲームを開始します！\n制限時間: ${TIMER_DURATION}秒`;
+      } else if (isUniqueWordMode) {
+        message = '同一単語禁止モードでゲームを開始します！';
+      }
+      alert(message);
     }
 
     // リセットボタンの押下時に実行

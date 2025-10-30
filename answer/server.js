@@ -24,7 +24,7 @@ Deno.serve(async (_req) => {
         // リクエストのペイロードを取得
         const requestJson = await _req.json();
         // JSONの中からnextWordを取得
-        const nextWord = requestJson["nextWord"];
+        const nextWord = requestJson["nextWord"].trim();
 
         // previousWordの末尾文字を取得（「ー」の場合は前の文字を参照）
         function getLastChar(word) {

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <!-- headタグの中にはメタデータ等を記載する -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- bodyタグの中には実際に表示するものなどを書く -->
+  <h1>しりとり</h1>
+  
+  <!-- ゲーム制御ボタン -->
+  <div id="gameControls">
+    <div id="gameOptions">
+      <label>
+        <input type="checkbox" id="timerModeCheckbox"> タイマーモード（1分間）
+      </label>
+      <br>
+      <label>
+        <input type="checkbox" id="uniqueWordModeCheckbox"> 同一単語禁止モード
+      </label>
+    </div>
+    <button id="startGameButton">ゲームスタート</button>
+    <button id="resetGameButton">リセット</button>
+  </div>
+  
+  <!-- ゲームエリア（初期状態では非表示） -->
+  <div id="gameArea" style="display: none;">
+    <!-- スコア表示エリア -->
+    <div id="scoreArea">
+      <p id="scoreDisplay">スコア: 0単語</p>
+      <p id="timerDisplay" style="display: none;">残り時間: 60秒</p>
+    </div>
+    
+    <!-- 現在の単語を表示する場所 -->
+    <p id="previousWord"></p>
+    <!-- 次の文字を入力するフォーム -->
+    <input id="nextWordInput" type="text" />
+    <button id="nextWordSendButton">送信</button>
+  </div>
+
+  <!-- ランキングエリア -->
+  <div id="rankingArea">
+    <h2>ランキング</h2>
+    <div id="rankingControls">
+      <button id="refreshRankingButton">ランキング更新</button>
+    </div>
+    <ol id="rankingList">
+      <li>ランキングを読み込み中...</li>
+    </ol>
+  </div>
+
+  <!-- JavaScriptを実行 -->
+  <script type="module" src="main.js">
+   
+  </script>
+</body>
+
+</html>
